@@ -1,17 +1,19 @@
-FROM debian:jessie
+FROM quay.io/3scale/base:trusty
 
 MAINTAINER Michal Cichra <michal@3scale.net> # 2014-05-23
 
-VOLUME ["/data/"]
-WORKDIR /data
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 136221EE520DDFAF0A905689B9316A7BC7917B12 \
+ && echo 'deb http://ppa.launchpad.net/chris-lea/redis-server/ubuntu trusty main' > /etc/apt/sources.list.d/redis-server.list
 
-RUN apt-get -y -q install redis-server \
- && ln -sf /data /var/lib/redis \
- && apt-get -q -y clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+RUN apt-install redis-server
 
 ADD redis.conf /etc/redis/
 
+RUN chown redis /etc/redis/*
+
+USER redis
+
 EXPOSE 6379/tcp
 
-CMD ["redis-server"]
-
+ENTRYPOINT ["redis-server"]
+CMD ["/etc/redis/redis.conf"]
