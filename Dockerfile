@@ -1,17 +1,20 @@
-FROM debian:jessie
+FROM centos:7
 
-MAINTAINER Michal Cichra <michal@3scale.net> # 2014-05-23
+RUN useradd -u 1001 -r -g 0 -d /data -s /sbin/nologin redis && \
+    rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+    yum install -y epel-release && \
+    yum install -y redis && \
+    yum clean all -y && \
+    mkdir -p /data && \
+    chgrp -v 0 /data && \
+    chmod -v g+w /data
 
-VOLUME ["/data/"]
-WORKDIR /data
+COPY redis.conf /etc/
 
-RUN apt-get -y -q install redis-server \
- && ln -sf /data /var/lib/redis \
- && apt-get -q -y clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+USER 1001
 
-ADD redis.conf /etc/redis/
+VOLUME /data
 
+ENTRYPOINT ["redis-server"]
+CMD ["/etc/redis.conf"]
 EXPOSE 6379/tcp
-
-CMD ["redis-server"]
-
